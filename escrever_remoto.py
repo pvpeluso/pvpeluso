@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Escreve script.txt no servidor remoto via Tailscale + SSH.
-Execute este script na sua máquina LOCAL (que tem Tailscale configurado).
+Conecta ao servidor Windows remoto via Tailscale + SSH (paramiko).
+Execute na sua maquina local (que tem Tailscale ativo).
+
+- Lista pastas do C:
+- Escreve script.txt em C:/Users/root/
 """
 
 import getpass
@@ -14,58 +17,53 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "paramiko"])
     import paramiko
 
-HOST = "peluso-server.tail0a82d5.ts.net"
+HOST = "100.79.62.56"
 USER = "root"
-REMOTE_PATH = "/root/script.txt"
+REMOTE_PATH = "C:/Users/root/script.txt"
 
-CONTEUDO = """# script.txt - arquivo de teste
-# Criado remotamente via Tailscale + Python + SSH
-# Servidor: peluso-server
+CONTEUDO = "# script.txt - criado remotamente via Tailscale + Python + SSH\r\n"
 
-echo "Olá do servidor remoto!"
-echo "Data: $(date)"
-"""
 
 def conectar(host, user):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    # Tenta primeiro com chave SSH local
-    try:
-        client.connect(host, username=user, timeout=10, allow_agent=True, look_for_keys=True)
-        print(f"✓ Conectado via chave SSH como {user}@{host}")
-        return client
-    except paramiko.AuthenticationException:
-        pass
-
-    # Tenta com senha
-    print(f"Chave SSH não funcionou. Informe a senha para {user}@{host}:")
-    senha = getpass.getpass("Senha: ")
-    client.connect(host, username=user, password=senha, timeout=10)
-    print(f"✓ Conectado via senha como {user}@{host}")
+    senha = getpass.getpass(f"Senha SSH para {user}@{host}: ")
+    client.connect(host, username=user, password=senha, timeout=15)
+    print(f"Conectado como {user}@{host}")
     return client
+
+
+def exec_cmd(client, cmd):
+    stdin, stdout, stderr = client.exec_command(cmd)
+    out = stdout.read().decode(errors="replace")
+    err = stderr.read().decode(errors="replace")
+    return out, err
 
 
 def main():
     print(f"Conectando em {USER}@{HOST}...")
-
     client = conectar(HOST, USER)
 
-    # Escreve o arquivo remoto via SFTP
+    # Lista pastas do C:
+    print("\n--- Pastas do C:\\ ---")
+    out, err = exec_cmd(client, "dir C:\\")
+    print(out or err)
+
+    # Escreve script.txt via SFTP
     sftp = client.open_sftp()
     with sftp.file(REMOTE_PATH, "w") as f:
         f.write(CONTEUDO)
     sftp.close()
+    print(f"Arquivo escrito em {REMOTE_PATH}")
 
-    print(f"✓ Arquivo escrito em {REMOTE_PATH}")
-
-    # Confirma o conteúdo
-    stdin, stdout, stderr = client.exec_command(f"cat {REMOTE_PATH}")
-    print("\n--- Conteúdo do arquivo no servidor ---")
-    print(stdout.read().decode())
+    # Confirma o conteudo
+    out, err = exec_cmd(client, 'type "C:\\Users\\root\\script.txt"')
+    print("\n--- Conteudo do script.txt ---")
+    print(out or err)
 
     client.close()
-    print("✓ Concluído!")
+    print("Concluido!")
 
 
 if __name__ == "__main__":
