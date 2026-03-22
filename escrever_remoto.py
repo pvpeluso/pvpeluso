@@ -18,8 +18,8 @@ except ImportError:
     import paramiko
 
 HOST = "100.79.62.56"
-USER = "root"
-REMOTE_PATH = "C:/Users/root/script.txt"
+USER = "paulo"
+REMOTE_PATH = "C:/Users/paulo/script.txt"
 
 CONTEUDO = "# script.txt - criado remotamente via Tailscale + Python + SSH\r\n"
 
