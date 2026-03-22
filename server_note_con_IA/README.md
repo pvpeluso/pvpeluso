@@ -119,39 +119,56 @@ scp paulo@100.79.62.56:"C:/Users/paulo/script.txt" ./
 
 ## Configuração SSH sem senha (chave pública)
 
-Para não digitar senha toda vez:
+> **Status: CONCLUIDO** — chave configurada em 22/03/2026 via `setup.sh`
+
+### Como foi feito (para referência)
 
 ```bash
-# 1. Gerar chave no Termux
-ssh-keygen -t ed25519 -C "tab_s9"
-# Pressionar Enter para tudo (sem passphrase para máximo conforto)
-
-# 2. Copiar chave para o servidor Windows
-ssh-copy-id paulo@100.79.62.56
-# OU manualmente:
-cat ~/.ssh/id_ed25519.pub | ssh paulo@100.79.62.56 "cat >> C:/Users/paulo/.ssh/authorized_keys"
+# Baixar e rodar o setup (faz tudo automaticamente)
+curl -O https://raw.githubusercontent.com/pvpeluso/pvpeluso/claude/remote-python-script-tailscale-AospO/server_note_con_IA/setup.sh
+bash setup.sh
+# Pediu senha uma única vez → chave instalada no servidor
 ```
 
-Depois disso, `ssh paulo@100.79.62.56` conecta sem senha.
+### Onde as chaves estão salvas
 
----
+| Arquivo | Local no Tablet | Descrição |
+|---------|----------------|-----------|
+| Chave privada | `~/.ssh/id_ed25519` | Fica no tablet — NUNCA compartilhar |
+| Chave pública | `~/.ssh/id_ed25519.pub` | Cópia enviada ao servidor |
+| Config SSH | `~/.ssh/config` | Alias `servidor` → IP + usuário |
 
-## Arquivo de Config SSH (atalho)
+**No servidor Windows**, a chave pública foi instalada em:
+```
+C:\Users\paulo\.ssh\authorized_keys
+```
 
-Criar `~/.ssh/config` no Termux:
+### Ver a chave pública (tablet)
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
 
+### Config SSH criada automaticamente (`~/.ssh/config`)
 ```
 Host servidor
     HostName 100.79.62.56
     User paulo
     Port 22
     IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
 ```
 
-Depois basta:
+### Resultado
 ```bash
-ssh servidor
+ssh servidor        # conecta sem senha
 scp arquivo.txt servidor:"C:/Users/paulo/"
+scp servidor:"C:/server/pasta" ~/
+```
+
+### Se precisar reconfigurar (ex: novo tablet)
+```bash
+bash setup.sh       # gera nova chave e instala no servidor
 ```
 
 ---
@@ -197,7 +214,9 @@ pip install paramiko
 ```
 server_note_con_IA/
 ├── README.md              # Esta documentação
-├── escrever_remoto.py     # Script principal de conexão
+├── setup.sh               # Setup automático (rodar uma vez)
+├── conectar.py            # Atalho Python para conexão/comandos
+├── escrever_remoto.py     # Script de escrita remota via SFTP
 ├── requirements.txt       # Dependências Python
 └── ssh_config.example     # Exemplo de config SSH
 ```
