@@ -7,6 +7,13 @@ Uso: python escrever_remoto.py
 """
 
 import getpass
+import os
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 try:
     import paramiko
@@ -16,9 +23,13 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "paramiko"])
     import paramiko
 
-HOST = "100.79.62.56"
-USER = "paulo"
-REMOTE_PATH = "C:/Users/paulo/script.txt"
+HOST = os.getenv("SSH_HOST")
+USER = os.getenv("SSH_USER")
+
+if not HOST or not USER:
+    raise SystemExit("Erro: crie um arquivo .env com SSH_HOST e SSH_USER (veja .env.example)")
+
+REMOTE_PATH = f"C:/Users/{USER}/script.txt"
 CONTEUDO = "# script.txt - criado remotamente via Tailscale + Python + SSH\r\n"
 
 

@@ -4,8 +4,18 @@
 # Execute UMA VEZ. Depois: ssh servidor
 # ============================================================
 
-HOST="100.79.62.56"
-USER="paulo"
+# Carregar do .env se existir
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+HOST="${SSH_HOST}"
+USER="${SSH_USER}"
+
+if [ -z "$HOST" ] || [ -z "$USER" ]; then
+    echo "Erro: crie um arquivo .env com SSH_HOST e SSH_USER (veja .env.example)"
+    exit 1
+fi
 
 echo "=== Setup SSH para $USER@$HOST ==="
 echo ""

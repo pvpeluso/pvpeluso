@@ -80,6 +80,16 @@ cd server_note_con_IA
 
 # Instalar dependências
 pip install -r requirements.txt
+
+# Criar arquivo .env com suas credenciais (não vai para o git)
+cp .env.example .env
+nano .env   # preencher SSH_HOST e SSH_USER
+```
+
+O arquivo `.env` fica assim:
+```
+SSH_HOST=100.79.62.56
+SSH_USER=paulo
 ```
 
 ---
@@ -218,8 +228,12 @@ server_note_con_IA/
 ├── conectar.py            # Atalho Python para conexão/comandos
 ├── escrever_remoto.py     # Script de escrita remota via SFTP
 ├── requirements.txt       # Dependências Python
-└── ssh_config.example     # Exemplo de config SSH
+├── ssh_config.example     # Exemplo de config SSH
+├── .env.example           # Modelo de variáveis de ambiente
+└── .gitignore             # Garante que .env nunca vai ao git
 ```
+
+> `.env` contém as credenciais reais e está no `.gitignore` — nunca é commitado.
 
 ---
 
